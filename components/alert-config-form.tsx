@@ -20,14 +20,15 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-// 预设颜色
+// 预设颜色 - 针对蓝色表头、白色背景报表优化
+// 避免使用蓝色系（与报表数字冲突），选择高对比度且协调的暖色系
 const PRESET_COLORS = [
-  { value: "#F97316", label: "橙色" },
-  { value: "#FBBF24", label: "黄色" },
-  { value: "#A3E635", label: "浅绿" },
-  { value: "#22C55E", label: "绿色" },
-  { value: "#EF4444", label: "红色" },
-  { value: "#3B82F6", label: "蓝色" },
+  { value: "#DC2626", label: "警示红" },    // 深红 - 最高优先级预警
+  { value: "#EA580C", label: "橙红" },      // 橙红 - 高优先级
+  { value: "#D97706", label: "琥珀" },      // 琥珀色 - 中高优先级
+  { value: "#CA8A04", label: "金黄" },      // 金黄 - 中等优先级
+  { value: "#65A30D", label: "黄绿" },      // 黄绿 - 低优先级
+  { value: "#16A34A", label: "翠绿" },      // 翠绿 - 最低/正常
 ]
 
 // 预警类型
@@ -145,6 +146,8 @@ function LayerConfigRow({
   )
 }
 
+let layerIdCounter = 0
+
 function LayerSection({
   title,
   description,
@@ -163,10 +166,11 @@ function LayerSection({
         lastLayer.percentage + Math.floor((100 - lastLayer.percentage) / 2),
         100
       )
+      layerIdCounter++
       onUpdateLayers([
         ...layers,
         {
-          id: crypto.randomUUID(),
+          id: `layer-${Date.now()}-${layerIdCounter}`,
           percentage: newPercentage,
           color: PRESET_COLORS[layers.length % PRESET_COLORS.length].value,
         },
@@ -240,14 +244,14 @@ export function AlertConfigForm({ onSubmit }: AlertConfigFormProps) {
   const [targetValue, setTargetValue] = useState("")
   const [alertColor, setAlertColor] = useState(PRESET_COLORS[0].value)
 
-  // 分层预警配置
+  // 分层预警配置 - 高于平均值用暖色（红→橙），低于平均值用冷暖过渡色（黄→绿）
   const [aboveLayers, setAboveLayers] = useState<LayerConfig[]>([
-    { id: "above-1", percentage: 50, color: "#EF4444" },
-    { id: "above-2", percentage: 100, color: "#F97316" },
+    { id: "above-1", percentage: 50, color: "#DC2626" },  // 前50%用深红
+    { id: "above-2", percentage: 100, color: "#EA580C" }, // 后50%用橙红
   ])
   const [belowLayers, setBelowLayers] = useState<LayerConfig[]>([
-    { id: "below-1", percentage: 50, color: "#FBBF24" },
-    { id: "below-2", percentage: 100, color: "#22C55E" },
+    { id: "below-1", percentage: 50, color: "#D97706" },  // 前50%用琥珀
+    { id: "below-2", percentage: 100, color: "#16A34A" }, // 后50%用翠绿
   ])
 
   const handleSubmit = () => {
